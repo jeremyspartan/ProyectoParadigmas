@@ -1,14 +1,16 @@
-﻿using ProyectoParagimas.Clases.Sintax;
+﻿using ProyectoParadigmas.AnalisisDeCodigo.Binding;
+using ProyectoParadigmas.Clases.Sintax;
 using System;
 
-namespace ProyectoParagimas.Clases.Binding
+namespace ProyectoParadigmas.Clases.Binding
 {
     internal class BoundOperadorBinario
     {
-        private BoundOperadorBinario(TiposSintax tipoSintax, BoundTipoOperadorBinario tipoOperador, Type type): this(tipoSintax, tipoOperador, type, type, type){}
+        private BoundOperadorBinario(TiposSintax tipoSintax, BoundTipoOperadorBinario tipoOperador, Type type) : this(tipoSintax, tipoOperador, type, type, type) { }
 
-        private BoundOperadorBinario(TiposSintax tipoSintax, BoundTipoOperadorBinario tipoOperador, Type tipoOperando, Type resultType) : 
-            this(tipoSintax, tipoOperador, tipoOperando, tipoOperando, resultType) { }
+        private BoundOperadorBinario(TiposSintax tipoSintax, BoundTipoOperadorBinario tipoOperador, Type tipoOperando, Type resultType) :
+            this(tipoSintax, tipoOperador, tipoOperando, tipoOperando, resultType)
+        { }
 
         private BoundOperadorBinario(TiposSintax tipoSintax, BoundTipoOperadorBinario tipoOperador, Type tipoIzq, Type tipoDer, Type resultType)
         {

@@ -1,30 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ProyectoParadigmas.Clases.Texto;
 
-namespace ProyectoParagimas.Clases.Sintax
+namespace ProyectoParadigmas.Clases.Sintax
 {
     internal class Token : NodoSintax
     {
-        public string texto { get; }
-        public int pos { get; }
-        public object valor { get; }
-        public override TiposSintax tipo { get; }
-
         public Token(TiposSintax tipo, int pos, string texto, object valor)
         {
-            this.tipo = tipo;
-            this.pos = pos;
-            this.texto = texto;
-            this.valor = valor;
+            this.Tipo = tipo;
+            this.Pos = pos;
+            this.Texto = texto;
+            this.Valor = valor;
         }
 
-
-        public override IEnumerable<NodoSintax> GetChildren()
-        {
-            return Enumerable.Empty<NodoSintax>();
-        }
+        public string Texto { get; }
+        public int Pos { get; }
+        public object Valor { get; }
+        public override TiposSintax Tipo { get; }
+        public override TextoSpan Span => new TextoSpan(Pos, Texto?.Length ?? 0);
     }
 }

@@ -1,15 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using ProyectoParadigmas.Clases.Texto;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
-namespace ProyectoParagimas.Clases.Sintax
+namespace ProyectoParadigmas.Clases.Sintax
 {
     internal class Parser
     {
-        private Token[] Elementos;
-        private int pos;
-        private Token ElementoActual => CheckEOF(0);
-        private List<string> Errores = new List<string>();
+        private readonly ImmutableArray<Token> _tokes;
+        private readonly BagDiagnosticos _diagnosticos = new BagDiagnosticos();
+        private readonly TextoFuente _texto;
+        private int _posicion;
 
-        public Parser(string texto)
+        public Parser(TextoFuente texto)
         {
             var lexer = new Lexer(texto);
             Token elemento;
@@ -17,64 +19,154 @@ namespace ProyectoParagimas.Clases.Sintax
 
             do
             {
-                elemento = lexer.ElementoSiguiente();//paso al caraceter siguiente
-                if (elemento.tipo != TiposSintax.ESPACIO && elemento.tipo != TiposSintax.TIPO_ERRONEO)
+                elemento = lexer.Lex();//paso al caraceter siguiente
+                if (elemento.Tipo != TiposSintax.ESPACIO && elemento.Tipo != TiposSintax.TIPO_ERRONEO)
                 {
                     elementos.Add(elemento);
                 }
 
-            } while (elemento.tipo != TiposSintax.EOF);
+            } while (elemento.Tipo != TiposSintax.EOF);
 
-            this.Elementos = elementos.ToArray();
-            Errores.AddRange(lexer.errores);
+            _texto = texto;
+            _tokes = elementos.ToImmutableArray();
+            _diagnosticos.AddRange(lexer.Diagnosticos);
         }
 
-        public IEnumerable<string> Errorres => Errores;
+        public BagDiagnosticos Diagnosticos => _diagnosticos;
+
+        private Token TokenActual => CheckEOF(0);
 
         //sirve para evitar agregar el EOF a la lista de elementos lexicos
         private Token CheckEOF(int offset)
         {
-            var index = pos + offset;
-            if (index >= Elementos.Length)
-                return Elementos[Elementos.Length - 1];
+            var index = _posicion + offset;
+            if (index >= _tokes.Length)
+                return _tokes[_tokes.Length - 1];
 
-            return Elementos[index];
+            return _tokes[index];
         }
 
-        private Token ElementoSiguiente()
+        private Token TokenSiguiente()
         {
-            var elementoActual = this.ElementoActual;
-            pos++;
+            var elementoActual = this.TokenActual;
+            _posicion++;
             return elementoActual;
         }
 
-        private Token Match(TiposSintax tipo)
+        private Token MatchToken(TiposSintax tipo)
         {
-            if (ElementoActual.tipo == tipo)
-                return ElementoSiguiente();
+            if (TokenActual.Tipo == tipo)
+                return TokenSiguiente();
 
-            Errores.Add($"Error: elemento inesperado: <{ElementoActual.tipo}>, se esperaba {tipo}.");
-            return new Token(tipo, ElementoActual.pos, null, null);
+            _diagnosticos.ReportarTokenInesperado(TokenActual.Span, TokenActual.Tipo, tipo);
+            return new Token(tipo, TokenActual.Pos, null, null);
         }
 
+        public UnidadCompilacionSintax ParseUnidadCompilacion()
+        {
+            var declaracion = ParseDeclaracion();
+            var eof = MatchToken(TiposSintax.EOF);
+            return new UnidadCompilacionSintax(declaracion, eof);
+        }
 
-        public ArbolSintax Parse()
+        private DeclaracionSintax ParseDeclaracion()
+        {
+            switch (TokenActual.Tipo)
+            {
+                case TiposSintax.LLAVE_APERTURA:
+                    return ParseDeclaracionBloque();
+                case TiposSintax.LET_CLAVE:
+                case TiposSintax.VAR_CLAVE:
+                    return ParseDeclaracionVariable();
+                default:
+                    return ParseDeclaracionExpresion();
+            }
+        }
+
+        private DeclaracionSintax ParseDeclaracionVariable()
+        {
+            var esperado = TokenActual.Tipo == TiposSintax.LET_CLAVE ? TiposSintax.LET_CLAVE : TiposSintax.VAR_CLAVE;
+            var palabraClave = MatchToken(esperado);
+            var identificador = MatchToken(TiposSintax.IDENTIFICADOR);
+            var equals = MatchToken(TiposSintax.ASIGNACION);
+            var inicializador = ParseExpresion();
+            return new DeclaracionVariableSintax(palabraClave, identificador, equals, inicializador);
+        }
+
+        private BloqueDeclaracionSintax ParseDeclaracionBloque()
+        {
+            var declaraciones = ImmutableArray.CreateBuilder<DeclaracionSintax>();
+            var llaveAperturaToken = MatchToken(TiposSintax.LLAVE_APERTURA);
+
+            while (TokenActual.Tipo != TiposSintax.EOF && TokenActual.Tipo != TiposSintax.LLAVE_CIERRE)
+            {
+                var declaracion = ParseDeclaracion();
+                declaraciones.Add(declaracion);
+            }
+
+            var llaveCierreToken = MatchToken(TiposSintax.LLAVE_CIERRE);
+
+            return new BloqueDeclaracionSintax(llaveAperturaToken, declaraciones.ToImmutable(), llaveCierreToken);
+        }
+
+        private ExpresionSintaxDeclaracion ParseDeclaracionExpresion()
         {
             var expresion = ParseExpresion();
-            var eof = Match(TiposSintax.EOF);
-            return new ArbolSintax(Errorres, expresion, eof);
+            return new ExpresionSintaxDeclaracion(expresion);
         }
 
-        private ExpresionSintax ParseExpresion(int parentPrecedence = 0)
+        private ExpresionSintax ParseExpresion()
+        {
+            return ParseExpresionAsignacion();
+        }
+
+        private ExpresionSintax ParseExpresionAsignacion()
+        {
+            /* 
+            a + b + 5
+            arbol normal
+                    +
+                    / \
+                    +   5
+                    / \
+                a   b
+            Normalmente la evaluacion inicia desde el nodo más a la  izquierda y termina con el nodo más a la derecha
+
+            Si se tiene la expresion de asignaciones a = b = 5 y se aplica la evaluacion anterior el arbol queda de la siguiente manera:
+                    =
+                    / \
+                    =   5
+                    / \
+                a   b
+            Lo cual es incorrecto, porque tenemos que a=b y luego que a y b = 5, la manera correcta es que b=5 y luego que a = b=5
+            por lo que el arbol deberia quedar:
+                    =
+                    / \
+                    a   =
+                        / \
+                    b   5
+            */
+            if (CheckEOF(0).Tipo == TiposSintax.IDENTIFICADOR && CheckEOF(1).Tipo == TiposSintax.ASIGNACION)
+            {
+                var tokenIdentificador = TokenSiguiente();
+                var operadorToken = TokenSiguiente();
+                var der = ParseExpresionAsignacion();
+                return new ExpresionSintaxAsignacion(tokenIdentificador, operadorToken, der);
+            }
+
+            return ParseExpresionBinaria();
+        }
+
+        private ExpresionSintax ParseExpresionBinaria(int parentPrecedence = 0)
         {
             ExpresionSintax izq;
             //operadores unarios como -(1+2) o +(3*1)
-            var operadorUnarioPre = ElementoActual.tipo.GetOperadorUnarioPrecendece();
+            var operadorUnarioPre = TokenActual.Tipo.GetOperadorUnarioPrecendece();
             if (operadorUnarioPre != 0 && operadorUnarioPre >= parentPrecedence)
             {
-                var operador = ElementoSiguiente();
-                var operando = ParseExpresion(operadorUnarioPre);
-                izq = new ExpresionUnaria(operador, operando);
+                var operador = TokenSiguiente();
+                var operando = ParseExpresionBinaria(operadorUnarioPre);
+                izq = new ExpresionSintaxUnaria(operador, operando);
             }
             else
             {
@@ -83,12 +175,12 @@ namespace ProyectoParagimas.Clases.Sintax
 
             while (true)
             {
-                var precedence = ElementoActual.tipo.GetOperadorBinarioPrecendece();
+                var precedence = TokenActual.Tipo.GetOperadorBinarioPrecendece();
                 if (precedence == 0 || precedence <= parentPrecedence)
                     break;
-                var op = ElementoSiguiente();
-                var der = ParseExpresion(precedence);
-                izq = new ExpresionBinaria(izq, op, der);
+                var op = TokenSiguiente();
+                var der = ParseExpresionBinaria(precedence);
+                izq = new ExpresionSintaxBinaria(izq, op, der);
             }
             return izq;
         }
@@ -96,29 +188,46 @@ namespace ProyectoParagimas.Clases.Sintax
 
         private ExpresionSintax ParseExpresionPrimaria()
         {
-            switch (ElementoActual.tipo)
+            switch (TokenActual.Tipo)
             {
                 case TiposSintax.PARENTESIS_APERTURA:
-                {
-                    var izq = ElementoSiguiente();
-                    var expresion = ParseExpresion();
-                    var der = Match(TiposSintax.PARENTESIS_CIERRE);
-                    return new ParentesisSintax(izq, expresion, der);
-                }
-
+                    return ParseExpresionParentesis();
                 case TiposSintax.VERDADERO:
                 case TiposSintax.FALSO:
-                {
-                    var palabraReservada = ElementoSiguiente();
-                    var valor = palabraReservada.tipo == TiposSintax.VERDADERO;
-                    return new ExpresionLiteral(palabraReservada, valor);
-                }
+                    return ParseLiteralBoolenao();
+                case TiposSintax.NUMERO:
+                    return ParseNumeroLiteral();
+                case TiposSintax.IDENTIFICADOR:
                 default:
-                {
-                    var elementoNumerico = Match(TiposSintax.NUMERO);
-                    return new ExpresionLiteral(elementoNumerico);
-                 }
+                    return ParseExpresionNombre();
             }
+        }
+
+        private ExpresionSintax ParseExpresionParentesis()
+        {
+            var izq = MatchToken(TiposSintax.PARENTESIS_APERTURA);
+            var expresion = ParseExpresion();
+            var der = MatchToken(TiposSintax.PARENTESIS_CIERRE);
+            return new ParentesisSintax(izq, expresion, der);
+        }
+
+        private ExpresionSintax ParseLiteralBoolenao()
+        {
+            var isTrue = TokenActual.Tipo == TiposSintax.VERDADERO;
+            var palabraReservada = isTrue ? MatchToken(TiposSintax.VERDADERO) : MatchToken(TiposSintax.FALSO);
+            return new ExpresionSintaxLiteral(palabraReservada, isTrue);
+        }
+
+        private ExpresionSintax ParseNumeroLiteral()
+        {
+            var elementoNumerico = MatchToken(TiposSintax.NUMERO);
+            return new ExpresionSintaxLiteral(elementoNumerico);
+        }
+
+        private ExpresionSintax ParseExpresionNombre()
+        {
+            var tokenIdentificador = MatchToken(TiposSintax.IDENTIFICADOR);
+            return new ExpresionSintaxNombre(tokenIdentificador);
         }
     }
 }

@@ -1,15 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ProyectoParagimas.Clases.Binding
+﻿namespace ProyectoParadigmas.Clases.Binding
 {
     internal enum BoundTipoNodo
     {
+        //Expresiones
         EXPRESION_LITERAL,
         EXPRESION_UNARIA,
-        EXPRESION_BINARIA
+        EXPRESION_BINARIA,
+        EXPRESION_VARIABLE,
+        EXPRESION_ASIGNACION,
+
+        //Declaraciones
+        BLOQUE_DECLARACION,
+        VARIABLE_DECLARACION,
+        EXPRESION_DECLARACION
     }
 }

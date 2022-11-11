@@ -1,26 +1,31 @@
-﻿<Window x:Class="ProyectoParagimas.MainWindow"
+﻿<Window x:Class="ProyectoParadigmas.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ProyectoParagimas"
+        xmlns:local="clr-namespace:ProyectoParadigmas"
         mc:Ignorable="d"
        Title="Proyecto Paradigmas" Height="450" Width="800">
     <Grid>
-        <Menu x:Name="menu_info" Margin="90,313,90,0" Height="35" VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Menu x:Name="menu_info" Margin="90,313,90,0" Height="35" VerticalAlignment="Top" Grid.ColumnSpan="2">
             <Label x:Name="lbl_lines" Content="Líneas: 1" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             <Label x:Name="lbl_line" Content="Línea: 1" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             <Label x:Name="lbl_col" Content="Columna: 1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Menu>
-        <RichTextBox x:Name="rtbCodigo" Margin="0,70,0,0" TextChanged="rtb_textChanged" FontFamily="Arial" SelectionChanged="rtb_SelectionChanged" Height="238" VerticalAlignment="Top" HorizontalAlignment="Center" Width="620" Background="#FF1E1E1E" Foreground="#FF569CD6">
+        <RichTextBox x:Name="rtbCodigo" Margin="0,70,0,0" TextChanged="rtb_textChanged" FontFamily="Arial" Height="238" VerticalAlignment="Top" HorizontalAlignment="Center" Width="620" Background="#FF1E1E1E" Foreground="#FF569CD6" Grid.Column="1">
             <FlowDocument>
-                <Paragraph Margin="0.5">
+                <Paragraph LineHeight="1">
 
                 </Paragraph>
             </FlowDocument>
         </RichTextBox>
-        <Menu x:Name="menu_tools" Margin="90,40,90,0" Height="25" VerticalAlignment="Top">
+        <Menu x:Name="menu_tools" Margin="90,40,90,0" Height="25" VerticalAlignment="Top" Grid.ColumnSpan="2">
             <Button x:Name="btn_compilar" Content="Compilar" HorizontalAlignment="Center" VerticalAlignment="Bottom" Click="btn_compilar_click"/>
+            <Button x:Name="btn_ejecutar" Content="Ejecutar" HorizontalAlignment="Center" VerticalAlignment="Center" Click="btn_ejecutar_Click"/>
         </Menu>
     </Grid>
 </Window>

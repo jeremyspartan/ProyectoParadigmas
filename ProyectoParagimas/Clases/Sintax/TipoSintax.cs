@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ProyectoParagimas.Clases.Sintax
+﻿namespace ProyectoParadigmas.Clases.Sintax
 {
     public enum TiposSintax
     {
@@ -28,15 +22,30 @@ namespace ProyectoParagimas.Clases.Sintax
         DOBLE_PALO,
         IGUALDAD,
         NO_IGUALDAD,
+        ASIGNACION,
+        LLAVE_APERTURA,
+        LLAVE_CIERRE,
+
+        //Nodos
+        UNIDAD_COMPILACION,
+
+        //Declaraciones
+        BLOQUE_DECLARACION,
+        VARIABLE_DECLARACION,
 
         //Expresiones
         EXPRESION_BINARIA,
         EXPRESION_PARENTESIS,
         EXPRESION_LITERAL,
         EXPRESION_UNARIA,
+        EXPRESION_NOMBRE,
+        EXPRESION_ASIGNACION,
+        EXPRESION_DECLARACION,
 
         //Palabras reservadas
         VERDADERO,
-        FALSO
+        FALSO,
+        LET_CLAVE,
+        VAR_CLAVE
     }
 }

@@ -1,24 +1,15 @@
-﻿using ProyectoParagimas.Clases;
-using ProyectoParagimas.Clases.Binding;
-using ProyectoParagimas.Clases.Sintax;
+﻿using ProyectoParadigmas.Clases;
+using ProyectoParadigmas.Clases.Sintax;
+using ProyectoParadigmas.Clases.Texto;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
-namespace ProyectoParagimas
+namespace ProyectoParadigmas
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -26,6 +17,8 @@ namespace ProyectoParagimas
     public partial class MainWindow : Window
     {
         private String content = "";
+        private Dictionary<SimboloVariable, object> variables = new Dictionary<SimboloVariable, object>();
+        Compilacion previo = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -35,9 +28,12 @@ namespace ProyectoParagimas
         private void rtb_textChanged(object sender, TextChangedEventArgs e)
         {
             lbl_lines.Content = "";
+            lbl_line.Content = "";
             RichTextBox rich = (RichTextBox)sender;
             lbl_lines.Content = "lineas: " + (RichPostion(rich.Document.ContentStart, rich.Document.ContentEnd).Item1);
-            TextRange textRange = new TextRange(
+            lbl_line.Content = "Linea: " + (RichPostion(rich.Document.ContentStart, rich.CaretPosition).Item1 + 1);
+            lbl_col.Content = "Columna: " + RichPostion(rich.Document.ContentStart, rich.CaretPosition).Item2;
+            TextRange textRange = new(
                //puntero al inicio del texto
                rich.Document.ContentStart,
             //puntero al final de la posicion actual de caret
@@ -46,19 +42,10 @@ namespace ProyectoParagimas
             content = textRange.Text;
         }
 
-        /*Sirve para determinar la linea actual de acuerdo a la posicon del caret en el richTextBox*/
-        private void rtb_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            lbl_line.Content = "";
-            RichTextBox rich = (RichTextBox)sender;
-            lbl_line.Content = "Linea: " + (RichPostion(rich.Document.ContentStart, rich.CaretPosition).Item1 + 1);
-            lbl_col.Content = "Columna: " + RichPostion(rich.Document.ContentStart, rich.CaretPosition).Item2;
-        }
-
         private static (int, int) RichPostion(TextPointer startPoint, TextPointer endPoint)
         {
             //seleccionar el texto solo de una linea
-            TextRange textRange = new TextRange(
+            TextRange textRange = new(
                 //puntero al inicio del texto
                 startPoint,
                 //puntero al final de la posicion actual de caret
@@ -81,55 +68,20 @@ namespace ProyectoParagimas
 
         private void btn_compilar_click(object sender, RoutedEventArgs e)
         {
-
-            Trace.WriteLine(content);
-            var arbolSintax = ArbolSintax.Parse(content);
-            var binder = new Binder();
-            var expresionBound = binder.ExpresionBind(arbolSintax.raiz);
-
-            var errores = arbolSintax.errores.Concat(binder.errores).ToArray();
-
-            PrettyPrint(arbolSintax.raiz);
-
-            if (errores.Any())
-            {
-                foreach(var error in errores)
-                    Trace.WriteLine(error);
-            }
-            else
-            {
-                var evaluador = new Evaluador(expresionBound);
-                var resultado = evaluador.Evaluar();
-                Trace.WriteLine(resultado);
-            }
-            //while (true)
-            //{
-            //    var token = lexer.ElementoSiguiente();
-            //    if (token.tipo == TipoSintax.Tipos.EOF)
-            //        break;
-
-                
-
-                //Trace.Write("Tipo:" + token.tipo + "| Texto:" + token.texto);
-                //if (token.valor != null)
-                //{
-                //    Trace.WriteLine("| Valor:" + token.valor);
-                //}
-                //Trace.WriteLine("");
-            //}
+            Accion(false);
 
         }
 
-        private void PrettyPrint( NodoSintax nodo, String indent = "", bool isLast = true)
+        private void PrettyPrint(NodoSintax nodo, String indent = "", bool isLast = true)
         {
             var marker = isLast ? "└──" : "├──";
             Trace.Write(indent);
             Trace.Write(marker);
-            Trace.Write(nodo.tipo);
-            if(nodo is Token t && t.valor != null )
+            Trace.Write(nodo.Tipo);
+            if (nodo is Token t && t.Valor != null)
             {
                 Trace.Write("");
-                Trace.Write(t.valor);
+                Trace.Write(t.Valor);
             }
             Trace.WriteLine("");
             indent += isLast ? "    " : "│   ";
@@ -137,7 +89,62 @@ namespace ProyectoParagimas
             var lastChild = nodo.GetChildren().LastOrDefault();
 
             foreach (var child in nodo.GetChildren())
-                PrettyPrint(child, indent, child==lastChild);
+                PrettyPrint(child, indent, child == lastChild);
+        }
+
+        private void btn_ejecutar_Click(object sender, RoutedEventArgs e)
+        {
+            Accion(true);
+        }
+
+        private void Accion(bool accion)
+        {
+            Trace.WriteLine(content);
+            var arbolSintax = ArbolSintax.Parse(content);
+            var compilacion = previo == null ? new Compilacion(arbolSintax) : previo.ContinuarCon(arbolSintax);
+            var resultado = compilacion.Evaluar(accion, variables);
+
+            var diagnosticos = resultado.Diagnosticos;
+
+            PrettyPrint(arbolSintax.Raiz);
+
+            if (!diagnosticos.Any())
+            {
+                previo = compilacion;
+                if (!accion)
+                    Trace.WriteLine($"Compilado sin Diagnosticos");
+                else
+                    Trace.WriteLine(resultado.Valor);
+            }
+            else
+            {
+                var texto = arbolSintax.Texto;
+                Trace.WriteLine($"Compilado con Diagnosticos");
+                Trace.WriteLine("Lista de Diagnosticos:");
+                Trace.WriteLine("**************************************************");
+                foreach (var diagnostico in diagnosticos)
+                {
+                    var indiceLinea = texto.GetIndiceLinea(diagnostico.TextSpan.Inicio);
+                    var linea = arbolSintax.Texto.Lineas[indiceLinea];
+                    var numLinea = indiceLinea + 1;
+                    var caracter = diagnostico.TextSpan.Inicio - texto.Lineas[indiceLinea].Inicio + 1;
+
+
+                    Trace.Write($"(Linea {numLinea}, Columna {caracter}): ");
+                    Trace.WriteLine(diagnostico);
+                    var spanPrefijo = TextoSpan.FromBounds(linea.Inicio, diagnostico.TextSpan.Inicio);
+                    var sufijoSpan = TextoSpan.FromBounds(diagnostico.TextSpan.Fin, linea.Final);
+
+                    var prefijo = arbolSintax.Texto.ToString(spanPrefijo);
+                    var error = arbolSintax.Texto.ToString(diagnostico.TextSpan);
+                    var sufijo = arbolSintax.Texto.ToString(sufijoSpan);
+                    Trace.Write(prefijo);
+                    Trace.Write($">{error}<");
+                    Trace.Write(sufijo);
+                    Trace.WriteLine("");
+                }
+                Trace.WriteLine("**************************************************");
+            }
         }
     }
 }

@@ -14,9 +14,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\computer\\Documents\\GitHub\\ProyectoParadigmas\\ProyectoParagimas\\ProyectoParagimas.csproj",
-      "projectName": "ProyectoParagimas",
-      "projectPath": "C:\\Users\\computer\\Documents\\GitHub\\ProyectoParadigmas\\ProyectoParagimas\\ProyectoParagimas.csproj",
+      "projectUniqueName": "C:\\Users\\computer\\Documents\\GitHub\\ProyectoParadigmas\\ProyectoParagimas\\ProyectoParadigmas.csproj",
+      "projectName": "ProyectoParadigmas",
+      "projectPath": "C:\\Users\\computer\\Documents\\GitHub\\ProyectoParadigmas\\ProyectoParagimas\\ProyectoParadigmas.csproj",
       "packagesPath": "C:\\Users\\computer\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\computer\\Documents\\GitHub\\ProyectoParadigmas\\ProyectoParagimas\\obj\\",
       "projectStyle": "PackageReference",

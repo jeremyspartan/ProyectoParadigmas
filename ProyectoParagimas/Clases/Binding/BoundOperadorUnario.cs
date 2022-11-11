@@ -1,15 +1,11 @@
-﻿using ProyectoParagimas.Clases.Sintax;
+﻿using ProyectoParadigmas.Clases.Sintax;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ProyectoParagimas.Clases.Binding
+namespace ProyectoParadigmas.Clases.Binding
 {
     internal class BoundOperadorUnario
     {
-        private BoundOperadorUnario(TiposSintax tipoSintax, BoundTipoOperadorUnario tipoOperador, Type type): this(tipoSintax, tipoOperador, type,type) { }
+        private BoundOperadorUnario(TiposSintax tipoSintax, BoundTipoOperadorUnario tipoOperador, Type type) : this(tipoSintax, tipoOperador, type, type) { }
 
         private BoundOperadorUnario(TiposSintax tipoSintax, BoundTipoOperadorUnario tipoOperador, Type type, Type resultType)
         {
@@ -32,11 +28,11 @@ namespace ProyectoParagimas.Clases.Binding
 
         };
 
-        public static BoundOperadorUnario Bind(TiposSintax tipoSintax, Type  tipoOperando)
+        public static BoundOperadorUnario Bind(TiposSintax tipoSintax, Type tipoOperando)
         {
             foreach (var operador in operadores)
             {
-                if(operador.TipoSintax == tipoSintax && operador.Type == tipoOperando)
+                if (operador.TipoSintax == tipoSintax && operador.Type == tipoOperando)
                 {
                     return operador;
                 }

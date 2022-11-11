@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ProyectoParagimas.Clases.Binding
+namespace ProyectoParadigmas.Clases.Binding
 {
     internal class ExpresionBinariaBound : ExpresionBound
     {
@@ -15,8 +11,8 @@ namespace ProyectoParagimas.Clases.Binding
             Der = der;
         }
 
-        public override BoundTipoNodo Tipo => BoundTipoNodo.EXPRESION_BINARIA;
-        public override Type Type => Operador.Tipo;
+        public override BoundTipoNodo TipoNodo => BoundTipoNodo.EXPRESION_BINARIA;
+        public override Type Tipo => Operador.Tipo;
         public ExpresionBound Izq { get; }
         public BoundOperadorBinario Operador { get; }
         public ExpresionBound Der { get; }

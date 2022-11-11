@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ProyectoParagimas.Clases.Binding
+﻿namespace ProyectoParadigmas.Clases.Binding
 {
     internal abstract class NodoBound
     {
-            public abstract BoundTipoNodo Tipo { get; }
+        public abstract BoundTipoNodo TipoNodo { get; }
     }
 }

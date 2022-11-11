@@ -1,138 +1,201 @@
-﻿using System.Collections.Generic;
+﻿using ProyectoParadigmas.Clases.Texto;
 
-namespace ProyectoParagimas.Clases.Sintax
+namespace ProyectoParadigmas.Clases.Sintax
 {
 
     internal sealed class Lexer
     {
-        private readonly string texto;
-        private int pos;
-        private List<string> Errores = new List<string>();
 
-        public Lexer(string texto)
+        private readonly TextoFuente _texto;
+        private readonly BagDiagnosticos _diagnosticos = new BagDiagnosticos();
+        private int _posicion;
+        private int _inicio;
+        private TiposSintax _tipo;
+        private object _valor;
+
+        public Lexer(TextoFuente texto)
         {
-            this.texto = texto;
+            _texto = texto;
         }
 
-        public IEnumerable<string> errores => Errores;
+        public BagDiagnosticos Diagnosticos => _diagnosticos;
 
         private char CharActual => EOF(0);
         private char LookAhead => EOF(1);
 
         private char EOF(int offset)
         {
-            var index = this.pos + offset;
-            if (pos >= texto.Length)
+            var index = _posicion + offset;
+            if (_posicion >= _texto.Tamannio)
                 return '\0';
-           
-            return this.texto[index];
-        }
 
-        private void CharSiguiente()
-        {
-            pos++;
+            return this._texto[index];
         }
 
         /*Sirve para identificar y moverse a lo largo de los elementos lexicos dentro del String de entrada y crear los elementos sintacticos que serán procesados en el parser*/
-        public Token ElementoSiguiente()
+        public Token Lex()
         {
 
-            if (CharActual.Equals('\0'))
-            {
-                return new Token(TiposSintax.EOF, pos++, "\0", null);
-            }
-
-            if (char.IsDigit(CharActual))
-            {
-                var inicio = pos;
-
-                while (char.IsDigit(CharActual))
-                {
-                    CharSiguiente();
-                }
-
-                var tam = pos - inicio;
-                var texto = this.texto.Substring(inicio, tam);
-
-                if (!int.TryParse(texto, out var valor))
-                {
-                    Errores.Add($"El numero {texto} no es tipo int32 valido");
-                }
-                return new Token(TiposSintax.NUMERO, inicio, texto, valor);
-            }
-
-            if (char.IsWhiteSpace(CharActual))
-            {
-                var inicio = pos;
-
-                while (char.IsWhiteSpace(CharActual))
-                {
-                    CharSiguiente();
-                }
-
-                var tam = pos - inicio;
-                var texto = this.texto.Substring(inicio, tam);
-                return new Token(TiposSintax.ESPACIO, inicio, texto, null);
-            }
-
-            //vamos a reconocer booleanos
-            if(char.IsLetter(CharActual))
-            {
-                var inicio = pos;
-
-                while (char.IsLetter(CharActual))
-                {
-                    CharSiguiente();
-                }
-
-                var tam = pos - inicio;
-                var texto = this.texto.Substring(inicio, tam);
-                var tipo = FactsSintax.GetPalabraReservada(texto);
-                return new Token(tipo, inicio, texto, null);
-            }
-
+            _inicio = _posicion;
+            _tipo = TiposSintax.TIPO_ERRONEO;
+            _valor = null;
             switch (CharActual)//Comienzo a crear los Token de acuerdo a los caracteres analizados
             {
-                case '+':
-                    return new Token(TiposSintax.SUMA, pos++, "+", null);
-                case '-':
-                    return new Token(TiposSintax.RESTA, pos++, "-", null);
-                case '*':
-                    return new Token(TiposSintax.ASTERISCO, pos++, "*", null);
-                case '/':
-                    return new Token(TiposSintax.SLASH, pos++, "/", null);
-                case '(':
-                    return new Token(TiposSintax.PARENTESIS_APERTURA, pos++, "(", null);
-                case ')':
-                    return new Token(TiposSintax.PARENTESIS_CIERRE, pos++, ")", null);
-                case '!':
-                    return new Token(TiposSintax.EXCLAMACION_CIERRE, pos++, "!", null);
-                case '&'://Para el "y"
-                {
-                    if(LookAhead == '&')
-                            return new Token(TiposSintax.DOBLE_AMPERSAND, pos+=2, "&&", null);
+                case '\0':
+                    _tipo = TiposSintax.EOF;
                     break;
-                }
+                case '+':
+                    _tipo = TiposSintax.SUMA;
+                    _posicion++;
+                    break;
+                case '-':
+                    _tipo = TiposSintax.RESTA;
+                    _posicion++;
+                    break;
+                case '*':
+                    _tipo = TiposSintax.ASTERISCO;
+                    _posicion++;
+                    break;
+                case '/':
+                    _tipo = TiposSintax.SLASH;
+                    _posicion++;
+                    break;
+                case '(':
+                    _tipo = TiposSintax.PARENTESIS_APERTURA;
+                    _posicion++;
+                    break;
+                case ')':
+                    _tipo = TiposSintax.PARENTESIS_CIERRE;
+                    _posicion++;
+                    break;
+                case '{':
+                    _tipo = TiposSintax.LLAVE_APERTURA;
+                    _posicion++;
+                    break;
+                case '}':
+                    _tipo = TiposSintax.LLAVE_CIERRE;
+                    _posicion++;
+                    break;
+                case '!':
+                    _tipo = TiposSintax.EXCLAMACION_CIERRE;
+                    _posicion++;
+                    break;
+                //la pos se corre para ignorar los operadores logicos
+                case '&'://Para el "y"
+                    {
+                        if (LookAhead == '&')
+                        {
+                            _posicion += 2;
+                            _tipo = TiposSintax.DOBLE_AMPERSAND;
+                        }
+                        break;
+                    }
                 case '|'://Para el "o"
                     {
                         if (LookAhead == '|')
-                            return new Token(TiposSintax.DOBLE_PALO, pos += 2, "||", null);
+                        {
+                            _posicion += 2;
+                            _tipo = TiposSintax.DOBLE_PALO;
+                        }
                         break;
                     }
                 case 'e'://Para el "igual"
                     {
                         if (LookAhead == 'q')
-                            return new Token(TiposSintax.IGUALDAD, pos += 2, "eq", null);
+                        {
+                            _posicion += 2;
+                            _tipo = TiposSintax.IGUALDAD;
+                        }
+                        break;
+                    }
+                case '='://Para la asignacion
+                    {
+                        _posicion += 1;
+                        _tipo = TiposSintax.ASIGNACION;
                         break;
                     }
                 case '¬'://Para el "diferente de"
                     {
-                        return new Token(TiposSintax.NO_IGUALDAD, pos += 1, "¬", null);
+                        _posicion += 1;
+                        _tipo = TiposSintax.NO_IGUALDAD;
+                        break;
                     }
-
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    LeerNumero();
+                    break;
+                case ' ':
+                case '\t':
+                case '\n':
+                case '\r':
+                    LeerEspacio();
+                    break;
+                default:
+                    if (char.IsLetter(CharActual))//vamos a reconocer booleanos
+                    {
+                        LeerIdentificadorOPalabraRerservada();
+                    }
+                    else if (char.IsWhiteSpace(CharActual))
+                    {
+                        LeerEspacio();
+                    }
+                    else
+                    {
+                        _diagnosticos.CaracterIncorrecto(_posicion, CharActual);
+                        _posicion++;
+                    }
+                    break;
             }
-            Errores.Add($"Error: caracter incorrecto: '{CharActual}'");
-            return new Token(TiposSintax.TIPO_ERRONEO, pos++, texto.Substring(pos - 1, 1), null);
+
+            var tamannio = _posicion - _inicio;
+            var texto = FactsSintax.GetTexto(_tipo);
+            if (texto == null)
+                texto = _texto.ToString(_inicio, tamannio);
+
+            return new Token(_tipo, _inicio, texto, _valor);
+        }
+
+        private void LeerNumero()
+        {
+            while (char.IsDigit(CharActual))
+                _posicion++;
+
+            var tam = _posicion - _inicio;
+            var texto = this._texto.ToString(_inicio, tam);
+
+            if (!int.TryParse(texto, out var valor))
+            {
+                _diagnosticos.ReportarNumeroInvalido(new TextoSpan(_inicio, tam), texto, typeof(int));
+            }
+
+            _valor = valor;
+            _tipo = TiposSintax.NUMERO;
+        }
+
+        private void LeerEspacio()
+        {
+            while (char.IsWhiteSpace(CharActual))
+                _posicion++;
+
+            _tipo = TiposSintax.ESPACIO;
+        }
+
+        private void LeerIdentificadorOPalabraRerservada()
+        {
+            while (char.IsLetter(CharActual))
+                _posicion++;
+
+            var tam = _posicion - _inicio;
+            var texto = _texto.ToString(_inicio, tam);
+            _tipo = FactsSintax.GetPalabraReservada(texto);
         }
     }
 }

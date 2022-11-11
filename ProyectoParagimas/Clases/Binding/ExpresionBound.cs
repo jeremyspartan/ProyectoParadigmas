@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace ProyectoParagimas.Clases.Binding
+namespace ProyectoParadigmas.Clases.Binding
 {
     internal abstract class ExpresionBound : NodoBound
     {
-        public abstract Type Type { get; }
+        public abstract Type Tipo { get; }
     }
 }

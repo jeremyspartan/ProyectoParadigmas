@@ -1,24 +1,53 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-namespace ProyectoParagimas.Clases.Sintax
+﻿using ProyectoParadigmas.Clases.Texto;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+
+namespace ProyectoParadigmas.Clases.Sintax
 {
     internal class ArbolSintax
     {
-        public IReadOnlyList<string> errores { get; }
-        public ExpresionSintax raiz { get; }
-        public Token eof { get; }
+        public TextoFuente Texto { get; }
+        public ImmutableArray<Diagnostico> Diagnosticos { get; }
+        public UnidadCompilacionSintax Raiz { get; }
 
-        public ArbolSintax(IEnumerable<string> errores, ExpresionSintax raiz, Token eof)
+        private ArbolSintax(TextoFuente texto)
         {
-            this.errores = errores.ToArray();
-            this.raiz = raiz;
-            this.eof = eof;
+            var parser = new Parser(texto);
+            var raiz = parser.ParseUnidadCompilacion();
+            var diagnosticos = parser.Diagnosticos.ToImmutableArray();
+            Diagnosticos = diagnosticos;
+            Texto = texto;
+            Raiz = raiz;
         }
 
         public static ArbolSintax Parse(string texto)
         {
-            var parser = new Parser(texto);
-            return parser.Parse();
+            var textoFuente = TextoFuente.From(texto);
+            return Parse(textoFuente);
+        }
+
+        public static ArbolSintax Parse(TextoFuente texto)
+        {
+            return new ArbolSintax(texto);
+        }
+
+        public static IEnumerable<Token> ParseTokens(string texto)
+        {
+            var textoFuente = TextoFuente.From(texto);
+            return ParseTokens(textoFuente);
+        }
+
+        public static IEnumerable<Token> ParseTokens(TextoFuente texto)
+        {
+            var lexer = new Lexer(texto);
+            while (true)
+            {
+                var token = lexer.Lex();
+                if (token.Tipo == TiposSintax.EOF)
+                    break;
+
+                yield return token;
+            }
         }
     }
 }

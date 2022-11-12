@@ -64,6 +64,10 @@ namespace ProyectoParadigmas.Clases.Binding
                     return VariableDeclaracionBind((DeclaracionVariableSintax)sintax);
                 case TiposSintax.IF_DECLARACION:
                     return IfDeclaracionBind((DeclaracionIfSintax)sintax);
+                case TiposSintax.WHILE_DECLRARACION:
+                    return WhileDeclaracionBind((DeclaracionWhileSintax)sintax);
+                case TiposSintax.FOR_DECLRARACION:
+                    return ForDeclaracionBind((DeclaracionForSintax)sintax);
                 case TiposSintax.EXPRESION_DECLARACION:
                     return ExpresionDeclaracionBind((ExpresionSintaxDeclaracion)sintax);
                 default:
@@ -104,6 +108,32 @@ namespace ProyectoParadigmas.Clases.Binding
             var thenDeclaracion = DeclaracionBind(sintax.ThenDeclaracion);
             var elseDeclaracion = sintax.ClausulaElse == null ? null : DeclaracionBind(sintax.ClausulaElse.ElseDeclaracion);
             return new BoundDeclaracionIf(condicion, thenDeclaracion, elseDeclaracion);
+        }
+
+        private BoundDeclaracion WhileDeclaracionBind(DeclaracionWhileSintax sintax)
+        {
+            var condicion = ExpresionBind(sintax.Condicion, typeof(bool));
+            var cuerpo = DeclaracionBind(sintax.Cuerpo);
+            return new BoundDeclaracionWhile(condicion, cuerpo);
+        }
+
+        private BoundDeclaracion ForDeclaracionBind(DeclaracionForSintax sintax)
+        {
+            var lowerBound = ExpresionBind(sintax.LowerBound, typeof(int));
+            var upperBound = ExpresionBind(sintax.UpperBound, typeof(int));
+
+            _scope = new BoundScope(_scope);
+
+            var nombre = sintax.Identificador.Texto;
+            var variable = new SimboloVariable(nombre, true, typeof(int));
+            if (!_scope.TryDeclare(variable))
+                _diagnosticos.ReportarVariableYaDeclarada(sintax.Identificador.Span, nombre);
+
+            var cuerpo = DeclaracionBind(sintax.Cuerpo);
+
+            _scope = _scope.Padre;
+
+            return new BoundDeclaracionFor(variable, lowerBound, upperBound, cuerpo);
         }
 
         private BoundDeclaracion ExpresionDeclaracionBind(ExpresionSintaxDeclaracion sintax)
@@ -161,6 +191,10 @@ namespace ProyectoParadigmas.Clases.Binding
         private ExpresionBound ExpresionNombrenBind(ExpresionSintaxNombre sintax)
         {
             var nombre = sintax.TokenIdentificador.Texto;
+
+            //esto significa que el token fue insertado por el parser. Ya reportamos un error, entonces podemos devolver una expresion de error
+            if(string.IsNullOrEmpty(nombre))
+                return new ExpresionLiteralBound(0);
 
             if (!_scope.TryLookUp(nombre, out var variable))
             {

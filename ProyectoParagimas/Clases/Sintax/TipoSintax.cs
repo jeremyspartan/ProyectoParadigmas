@@ -38,6 +38,9 @@
         BLOQUE_DECLARACION,
         VARIABLE_DECLARACION,
         IF_DECLARACION,
+        WHILE_DECLRARACION,
+        FOR_DECLRARACION,
+        EXPRESION_DECLARACION,
 
         //Expresiones
         EXPRESION_BINARIA,
@@ -46,7 +49,6 @@
         EXPRESION_UNARIA,
         EXPRESION_NOMBRE,
         EXPRESION_ASIGNACION,
-        EXPRESION_DECLARACION,
 
         //Palabras reservadas
         VERDADERO,
@@ -54,6 +56,9 @@
         LET_CLAVE,
         VAR_CLAVE,
         IF_CLAVE,
-        ELSE_CLAVE
+        ELSE_CLAVE,
+        WHILE_CLAVE,
+        FOR_CLAVE,
+        TO_CLAVE
     }
 }

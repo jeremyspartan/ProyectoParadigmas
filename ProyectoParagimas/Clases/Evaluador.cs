@@ -36,6 +36,12 @@ namespace ProyectoParadigmas.Clases
                 case BoundTipoNodo.IF_DECLARACION:
                     EvaluarIfDeclaracion((BoundDeclaracionIf)nodo);
                     break;
+                case BoundTipoNodo.WHILE_DECLRACION:
+                    EvaluarWhileDeclaracion((BoundDeclaracionWhile)nodo);
+                    break;
+                case BoundTipoNodo.FOR_DECLRARACION:
+                    EvaluarForDeclaracion((BoundDeclaracionFor)nodo);
+                    break;
                 case BoundTipoNodo.EXPRESION_DECLARACION:
                     EvaluarExpresionDeclaracion((ExpresionDeclaracionBound)nodo);
                     break;
@@ -64,6 +70,24 @@ namespace ProyectoParadigmas.Clases
                 EvaluarDeclaracion(nodo.ThenDeclaracion);
             else if (nodo.ElseDeclaracion != null)
                 EvaluarDeclaracion(nodo.ElseDeclaracion);
+        }
+
+        private void EvaluarWhileDeclaracion(BoundDeclaracionWhile nodo)
+        {
+            while((bool)EvaluarExpresion(nodo.Condicion))
+                EvaluarDeclaracion(nodo.Cuerpo);
+        }
+
+        private void EvaluarForDeclaracion(BoundDeclaracionFor nodo)
+        {
+            var lowerBound = (int)EvaluarExpresion(nodo.LowerBound);
+            var upperBound = (int)EvaluarExpresion(nodo.UpperBound);
+            for(var i = lowerBound; i <= upperBound; i++)
+            {
+                _variables[nodo.Variable] = i;
+                EvaluarDeclaracion(nodo.Cuerpo);
+            }
+
         }
 
         private void EvaluarExpresionDeclaracion(ExpresionDeclaracionBound nodo)

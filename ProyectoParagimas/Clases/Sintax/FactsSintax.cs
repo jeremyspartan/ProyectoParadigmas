@@ -69,6 +69,12 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return TiposSintax.LET_CLAVE;
                 case "var":
                     return TiposSintax.VAR_CLAVE;
+                case "while":
+                    return TiposSintax.WHILE_CLAVE;
+                case "for":
+                    return TiposSintax.FOR_CLAVE;
+                case "to":
+                    return TiposSintax.TO_CLAVE;
                 default:
                     return TiposSintax.IDENTIFICADOR;
             }
@@ -146,6 +152,12 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return "if";
                 case TiposSintax.ELSE_CLAVE:
                     return "else";
+                case TiposSintax.FOR_CLAVE:
+                    return "for";
+                case TiposSintax.WHILE_CLAVE:
+                    return "while";
+                case TiposSintax.TO_CLAVE:
+                    return "to";
                 default:
                     return null;
             }

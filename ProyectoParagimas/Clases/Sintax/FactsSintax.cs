@@ -22,6 +22,10 @@ namespace ProyectoParadigmas.Clases.Sintax
 
                 case TiposSintax.IGUALDAD:
                 case TiposSintax.NO_IGUALDAD:
+                case TiposSintax.MENOR:
+                case TiposSintax.MAYOR:
+                case TiposSintax.MENOR_IGUAL:
+                case TiposSintax.MAYOR_IGUAL:
                     return 3;
 
                 case TiposSintax.DOBLE_AMPERSAND:
@@ -57,6 +61,10 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return TiposSintax.VERDADERO;
                 case "false":
                     return TiposSintax.FALSO;
+                case "if":
+                    return TiposSintax.IF_CLAVE;
+                case "else":
+                    return TiposSintax.ELSE_CLAVE;
                 case "let":
                     return TiposSintax.LET_CLAVE;
                 case "var":
@@ -100,8 +108,16 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return "/";
                 case TiposSintax.EXCLAMACION_CIERRE:
                     return "!";
+                case TiposSintax.MENOR:
+                    return "<";
+                case TiposSintax.MAYOR:
+                    return ">";
+                case TiposSintax.MENOR_IGUAL:
+                    return "<=";
+                case TiposSintax.MAYOR_IGUAL:
+                    return ">=";
                 case TiposSintax.ASIGNACION:
-                    return "eq";
+                    return "=";
                 case TiposSintax.DOBLE_AMPERSAND:
                     return "&&";
                 case TiposSintax.DOBLE_PALO:
@@ -126,6 +142,10 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return "let";
                 case TiposSintax.VAR_CLAVE:
                     return "var";
+                case TiposSintax.IF_CLAVE:
+                    return "if";
+                case TiposSintax.ELSE_CLAVE:
+                    return "else";
                 default:
                     return null;
             }

@@ -30,32 +30,40 @@ namespace ProyectoParadigmas.Clases
                 case BoundTipoNodo.BLOQUE_DECLARACION:
                     EvaluarBloqueDeclaracion((BoundBloqueDeclaracion)nodo);
                     break;
+                case BoundTipoNodo.VARIABLE_DECLARACION:
+                    EvaluarVariableDeclaracion((BoundDeclaracionVariable)nodo);
+                    break;
+                case BoundTipoNodo.IF_DECLARACION:
+                    EvaluarIfDeclaracion((BoundDeclaracionIf)nodo);
+                    break;
                 case BoundTipoNodo.EXPRESION_DECLARACION:
                     EvaluarExpresionDeclaracion((ExpresionDeclaracionBound)nodo);
-                    break;
-                case BoundTipoNodo.VARIABLE_DECLARACION:
-                    EvaluarDeclaracionVariable((BoundDeclaracionVariable)nodo);
                     break;
                 default:
                     throw new Exception($"Nodo inesperado {nodo.TipoNodo}");
             }
-            static object EvaluarExpresionLiteral(ExpresionLiteralBound n)
-            {
-                return n.Valor;
-            }
-        }
-
-        private void EvaluarDeclaracionVariable(BoundDeclaracionVariable nodo)
-        {
-            var valor = EvaluarExpresion(nodo.Inicializador);
-            _variables[nodo.Variable] = valor;
-            _ultimoValor = valor;
         }
 
         private void EvaluarBloqueDeclaracion(BoundBloqueDeclaracion nodo)
         {
             foreach (var declaracion in nodo.Declaraciones)
                 EvaluarDeclaracion(declaracion);
+        }
+
+        private void EvaluarVariableDeclaracion(BoundDeclaracionVariable nodo)
+        {
+            var valor = EvaluarExpresion(nodo.Inicializador);
+            _variables[nodo.Variable] = valor;
+            _ultimoValor = valor;
+        }
+
+        private void EvaluarIfDeclaracion(BoundDeclaracionIf nodo)
+        {
+            var condicion = (bool)EvaluarExpresion(nodo.Condicion);
+            if (condicion)
+                EvaluarDeclaracion(nodo.ThenDeclaracion);
+            else if (nodo.ElseDeclaracion != null)
+                EvaluarDeclaracion(nodo.ElseDeclaracion);
         }
 
         private void EvaluarExpresionDeclaracion(ExpresionDeclaracionBound nodo)
@@ -138,8 +146,16 @@ namespace ProyectoParadigmas.Clases
                     return Equals(izq, der);
                 case BoundTipoOperadorBinario.DIFERENTE_DE:
                     return !Equals(izq, der);
+                case BoundTipoOperadorBinario.MENOR_QUE:
+                    return (int)izq < (int)der;
+                case BoundTipoOperadorBinario.MAYOR_QUE:
+                    return (int)izq > (int)der;
+                case BoundTipoOperadorBinario.MENOR_IGUAL_QUE:
+                    return (int)izq <= (int)der;
+                case BoundTipoOperadorBinario.MAYOR_IGUAL_QUE:
+                    return (int)izq >= (int)der;
                 default:
-                    throw new Exception($"Declaracion binaria inesperada {expBin.Operador}");
+                    throw new Exception($"ThenDeclaracion binaria inesperada {expBin.Operador}");
             }
         }
     }

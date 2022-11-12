@@ -11,10 +11,7 @@ namespace ProyectoParadigmas.Clases
     {
         private BoundGlobalScope _globalScope;
 
-        public Compilacion(ArbolSintax arbolSintax) : this(null, arbolSintax)
-        {
-            ArbolSintax = arbolSintax;
-        }
+        public Compilacion(ArbolSintax arbolSintax) : this(null, arbolSintax) { }
 
         private Compilacion(Compilacion previo, ArbolSintax arbolSintax)
         {

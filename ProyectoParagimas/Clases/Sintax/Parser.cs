@@ -1,4 +1,5 @@
 ﻿using ProyectoParadigmas.Clases.Texto;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -78,19 +79,11 @@ namespace ProyectoParadigmas.Clases.Sintax
                 case TiposSintax.LET_CLAVE:
                 case TiposSintax.VAR_CLAVE:
                     return ParseDeclaracionVariable();
+                case TiposSintax.IF_CLAVE:
+                    return ParseDeclaracionIf();
                 default:
                     return ParseDeclaracionExpresion();
             }
-        }
-
-        private DeclaracionSintax ParseDeclaracionVariable()
-        {
-            var esperado = TokenActual.Tipo == TiposSintax.LET_CLAVE ? TiposSintax.LET_CLAVE : TiposSintax.VAR_CLAVE;
-            var palabraClave = MatchToken(esperado);
-            var identificador = MatchToken(TiposSintax.IDENTIFICADOR);
-            var equals = MatchToken(TiposSintax.ASIGNACION);
-            var inicializador = ParseExpresion();
-            return new DeclaracionVariableSintax(palabraClave, identificador, equals, inicializador);
         }
 
         private BloqueDeclaracionSintax ParseDeclaracionBloque()
@@ -107,6 +100,34 @@ namespace ProyectoParadigmas.Clases.Sintax
             var llaveCierreToken = MatchToken(TiposSintax.LLAVE_CIERRE);
 
             return new BloqueDeclaracionSintax(llaveAperturaToken, declaraciones.ToImmutable(), llaveCierreToken);
+        }
+
+        private DeclaracionSintax ParseDeclaracionVariable()
+        {
+            var esperado = TokenActual.Tipo == TiposSintax.LET_CLAVE ? TiposSintax.LET_CLAVE : TiposSintax.VAR_CLAVE;
+            var palabraClave = MatchToken(esperado);
+            var identificador = MatchToken(TiposSintax.IDENTIFICADOR);
+            var equals = MatchToken(TiposSintax.ASIGNACION);
+            var inicializador = ParseExpresion();
+            return new DeclaracionVariableSintax(palabraClave, identificador, equals, inicializador);
+        }
+
+        private DeclaracionSintax ParseDeclaracionIf()
+        {
+            var clave = MatchToken(TiposSintax.IF_CLAVE);
+            var condicion = ParseExpresion();
+            var declaracion = ParseDeclaracion();
+            var clausulaElse = ParseClausulaElse();
+            return new DeclaracionIfSintax(clave, condicion, declaracion, clausulaElse);
+        }
+
+        private ClausulaElseSintax ParseClausulaElse()
+        {
+            if (TokenActual.Tipo != TiposSintax.ELSE_CLAVE)
+                return null;
+            var clave = TokenSiguiente();
+            var declaracion = ParseDeclaracion();
+            return new ClausulaElseSintax(clave, declaracion);
         }
 
         private ExpresionSintaxDeclaracion ParseDeclaracionExpresion()

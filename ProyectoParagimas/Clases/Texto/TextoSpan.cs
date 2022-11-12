@@ -17,5 +17,7 @@
             var tamannio = fin - inicio;
             return new TextoSpan(inicio, tamannio);
         }
+
+        public override string ToString() => $"{Inicio}..{Fin}";
     }
 }

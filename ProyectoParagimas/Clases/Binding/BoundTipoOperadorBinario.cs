@@ -9,6 +9,10 @@
         Y_LOGICO,
         O_LOGICO,
         IGUAL_A,
-        DIFERENTE_DE
+        DIFERENTE_DE,
+        MENOR_QUE,
+        MENOR_IGUAL_QUE,
+        MAYOR_QUE,
+        MAYOR_IGUAL_QUE
     }
 }

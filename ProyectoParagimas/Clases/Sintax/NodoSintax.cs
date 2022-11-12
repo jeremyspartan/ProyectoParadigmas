@@ -36,13 +36,18 @@ namespace ProyectoParadigmas.Clases.Sintax
                 if (typeof(NodoSintax).IsAssignableFrom(propiedad.PropertyType))//...si puedo tomar alguna de propiedad que pueda convertir a nodo?
                 {
                     var hijo = (NodoSintax)propiedad.GetValue(this);
-                    yield return hijo;
+                    if(hijo != null)
+                        yield return hijo;
                 }
                 else if (typeof(IEnumerable<NodoSintax>).IsAssignableFrom(propiedad.PropertyType))
                 {
                     var hijos = (IEnumerable<NodoSintax>)propiedad.GetValue(this);
                     foreach (var hijo in hijos)
+                    {
+                        if (hijo != null)
                         yield return hijo;
+                    }
+                        
                 }
             }
         }

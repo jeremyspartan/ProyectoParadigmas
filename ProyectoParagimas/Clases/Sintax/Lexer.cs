@@ -99,19 +99,18 @@ namespace ProyectoParadigmas.Clases.Sintax
                         }
                         break;
                     }
-                case 'e'://Para el "igual"
+                case '='://Para el "igual" o asingacion
                     {
-                        if (LookAhead == 'q')
+                        _posicion++;
+                        if(CharActual != '=')
                         {
-                            _posicion += 2;
-                            _tipo = TiposSintax.IGUALDAD;
+                            _tipo = TiposSintax.ASIGNACION;
                         }
-                        break;
-                    }
-                case '='://Para la asignacion
-                    {
-                        _posicion += 1;
-                        _tipo = TiposSintax.ASIGNACION;
+                        else
+                        {
+                            _tipo = TiposSintax.IGUALDAD;
+                            _posicion++;
+                        }
                         break;
                     }
                 case '¬'://Para el "diferente de"
@@ -120,16 +119,28 @@ namespace ProyectoParadigmas.Clases.Sintax
                         _tipo = TiposSintax.NO_IGUALDAD;
                         break;
                     }
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
+                case '<':
+                    _posicion++;
+                    if (CharActual != '=')
+                        _tipo = TiposSintax.MENOR;
+                    else
+                    {
+                        _tipo = TiposSintax.MENOR_IGUAL;
+                        _posicion++;
+                    }
+                    break;
+                case '>':
+                    _posicion++;
+                    if (CharActual != '=')
+                        _tipo = TiposSintax.MAYOR;
+                    else
+                    {
+                        _tipo = TiposSintax.MAYOR_IGUAL;
+                        _posicion++;
+                    }
+                    break;
+                case '0': case '1': case '2': case '3': case '4':
+                case '5' :case '6': case '7': case '8': case '9':
                     LeerNumero();
                     break;
                 case ' ':

@@ -62,24 +62,13 @@ namespace ProyectoParadigmas.Clases.Binding
                     return BloqueDeclaracionBind((BloqueDeclaracionSintax)sintax);
                 case TiposSintax.VARIABLE_DECLARACION:
                     return VariableDeclaracionBind((DeclaracionVariableSintax)sintax);
+                case TiposSintax.IF_DECLARACION:
+                    return IfDeclaracionBind((DeclaracionIfSintax)sintax);
                 case TiposSintax.EXPRESION_DECLARACION:
                     return ExpresionDeclaracionBind((ExpresionSintaxDeclaracion)sintax);
                 default:
                     throw new Exception($"sintaxis inesperada {sintax.Tipo}");
             }
-        }
-
-        private BoundDeclaracion VariableDeclaracionBind(DeclaracionVariableSintax sintax)
-        {
-            var nombre = sintax.Identificador.Texto;
-            var isReadOnly = sintax.PalabraReservada.Tipo == TiposSintax.LET_CLAVE;
-            var inicializador = ExpresionBind(sintax.Inicializador);
-            var variable = new SimboloVariable(nombre, isReadOnly, inicializador.Tipo);
-
-            if (!_scope.TryDeclare(variable))
-                _diagnosticos.ReportarVariableYaDeclarada(sintax.Identificador.Span, nombre);
-
-            return new BoundDeclaracionVariable(variable, inicializador);
         }
 
         private BoundDeclaracion BloqueDeclaracionBind(BloqueDeclaracionSintax sintax)
@@ -96,10 +85,39 @@ namespace ProyectoParadigmas.Clases.Binding
             return new BoundBloqueDeclaracion(declaraciones.ToImmutableArray());
         }
 
+        private BoundDeclaracion VariableDeclaracionBind(DeclaracionVariableSintax sintax)
+        {
+            var nombre = sintax.Identificador.Texto;
+            var isReadOnly = sintax.PalabraReservada.Tipo == TiposSintax.LET_CLAVE;
+            var inicializador = ExpresionBind(sintax.Inicializador);
+            var variable = new SimboloVariable(nombre, isReadOnly, inicializador.Tipo);
+
+            if (!_scope.TryDeclare(variable))
+                _diagnosticos.ReportarVariableYaDeclarada(sintax.Identificador.Span, nombre);
+
+            return new BoundDeclaracionVariable(variable, inicializador);
+        }
+
+        private BoundDeclaracion IfDeclaracionBind(DeclaracionIfSintax sintax)
+        {
+            var condicion = ExpresionBind(sintax.Condicion, typeof(bool));
+            var thenDeclaracion = DeclaracionBind(sintax.ThenDeclaracion);
+            var elseDeclaracion = sintax.ClausulaElse == null ? null : DeclaracionBind(sintax.ClausulaElse.ElseDeclaracion);
+            return new BoundDeclaracionIf(condicion, thenDeclaracion, elseDeclaracion);
+        }
+
         private BoundDeclaracion ExpresionDeclaracionBind(ExpresionSintaxDeclaracion sintax)
         {
             var expresion = ExpresionBind(sintax.Expresion);
             return new ExpresionDeclaracionBound(expresion);
+        }
+
+        private ExpresionBound ExpresionBind(ExpresionSintax sintax, Type tipoTarget)
+        {
+            var resultado = ExpresionBind(sintax);
+            if (resultado.Tipo != tipoTarget)
+                _diagnosticos.ReportarNoSePuedeConvertir(sintax.Span, resultado.Tipo, tipoTarget);
+            return resultado;
         }
 
         private ExpresionBound ExpresionBind(ExpresionSintax sintax)

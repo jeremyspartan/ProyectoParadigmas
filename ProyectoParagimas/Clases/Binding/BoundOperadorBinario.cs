@@ -37,6 +37,10 @@ namespace ProyectoParadigmas.Clases.Binding
             new BoundOperadorBinario(TiposSintax.DOBLE_PALO, BoundTipoOperadorBinario.O_LOGICO, typeof(bool)),
             new BoundOperadorBinario(TiposSintax.IGUALDAD, BoundTipoOperadorBinario.IGUAL_A, typeof(int),typeof(bool)),
             new BoundOperadorBinario(TiposSintax.NO_IGUALDAD, BoundTipoOperadorBinario.DIFERENTE_DE, typeof(int),typeof(bool)),
+            new BoundOperadorBinario(TiposSintax.MENOR, BoundTipoOperadorBinario.MENOR_QUE, typeof(int),typeof(bool)),
+            new BoundOperadorBinario(TiposSintax.MENOR_IGUAL, BoundTipoOperadorBinario.MENOR_IGUAL_QUE, typeof(int),typeof(bool)),
+            new BoundOperadorBinario(TiposSintax.MAYOR, BoundTipoOperadorBinario.MAYOR_QUE, typeof(int),typeof(bool)),
+            new BoundOperadorBinario(TiposSintax.MAYOR_IGUAL, BoundTipoOperadorBinario.MAYOR_IGUAL_QUE, typeof(int),typeof(bool)),
             //tambien se puede definir los tipos de desigualdad e igualdad sobre objetos de tipo bool
              new BoundOperadorBinario(TiposSintax.IGUALDAD, BoundTipoOperadorBinario.IGUAL_A, typeof(bool)),
             new BoundOperadorBinario(TiposSintax.NO_IGUALDAD, BoundTipoOperadorBinario.DIFERENTE_DE, typeof(bool))

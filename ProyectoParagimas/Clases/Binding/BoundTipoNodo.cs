@@ -12,6 +12,7 @@
         //Declaraciones
         BLOQUE_DECLARACION,
         VARIABLE_DECLARACION,
-        EXPRESION_DECLARACION
+        EXPRESION_DECLARACION,
+        IF_DECLARACION
     }
 }

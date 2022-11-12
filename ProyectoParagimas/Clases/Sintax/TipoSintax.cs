@@ -25,13 +25,19 @@
         ASIGNACION,
         LLAVE_APERTURA,
         LLAVE_CIERRE,
+        MENOR,
+        MENOR_IGUAL,
+        MAYOR,
+        MAYOR_IGUAL,
 
         //Nodos
         UNIDAD_COMPILACION,
+        CLAUSULA_ELSE,
 
         //Declaraciones
         BLOQUE_DECLARACION,
         VARIABLE_DECLARACION,
+        IF_DECLARACION,
 
         //Expresiones
         EXPRESION_BINARIA,
@@ -46,6 +52,8 @@
         VERDADERO,
         FALSO,
         LET_CLAVE,
-        VAR_CLAVE
+        VAR_CLAVE,
+        IF_CLAVE,
+        ELSE_CLAVE
     }
 }

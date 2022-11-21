@@ -1,4 +1,6 @@
 ﻿using ProyectoParadigmas.Clases.Binding;
+using ProyectoParadigmas.Clases.Lowering;
+using ProyectoParadigmas.Clases.Simbolos;
 using ProyectoParadigmas.Clases.Sintax;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -47,7 +49,8 @@ namespace ProyectoParadigmas.Clases
             if (diagnosticos.Any())
                 return new ResultadoEvaluacion(diagnosticos.ToImmutableArray(), null);
 
-            var evaluador = new Evaluador(GlobalScope.Declaracion, variables);
+            var declracion = GetDeclaracion();
+            var evaluador = new Evaluador(declracion, variables);
             if (ejecutar)
             {
                 var valor = evaluador.Evaluar();
@@ -57,6 +60,12 @@ namespace ProyectoParadigmas.Clases
             {
                 return new ResultadoEvaluacion(ImmutableArray<Diagnostico>.Empty, null);
             }
+        }
+
+        private BoundBloqueDeclaracion GetDeclaracion()
+        {
+            var resultado = GlobalScope.Declaracion;
+            return Lowerer.Lower(resultado);
         }
     }
 }

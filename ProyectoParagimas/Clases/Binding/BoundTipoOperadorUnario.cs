@@ -3,7 +3,8 @@
     internal enum BoundTipoOperadorUnario
     {
         IDENTIDAD,
-        NEGACION,
-        NEGACION_LOGICA
+        RESTA,
+        NEGACION_LOGICA,
+        COMPLEMENTO
     }
 }

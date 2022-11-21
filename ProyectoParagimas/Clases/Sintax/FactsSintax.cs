@@ -29,9 +29,12 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return 3;
 
                 case TiposSintax.DOBLE_AMPERSAND:
+                case TiposSintax.AMPERSAND:
                     return 2;
 
                 case TiposSintax.DOBLE_PALO:
+                case TiposSintax.PALO:
+                case TiposSintax.SOMBRERO:
                     return 1;
 
                 default:
@@ -46,6 +49,7 @@ namespace ProyectoParadigmas.Clases.Sintax
                 case TiposSintax.SUMA:
                 case TiposSintax.RESTA:
                 case TiposSintax.EXCLAMACION_CIERRE:
+                case TiposSintax.NEGACION:
                     return 6;
 
                 default:
@@ -126,8 +130,16 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return "=";
                 case TiposSintax.DOBLE_AMPERSAND:
                     return "&&";
+                case TiposSintax.AMPERSAND:
+                    return "&";
                 case TiposSintax.DOBLE_PALO:
                     return "||";
+                case TiposSintax.PALO:
+                    return "|";
+                case TiposSintax.SOMBRERO:
+                    return "^";
+                case TiposSintax.NEGACION:
+                    return "~";
                 case TiposSintax.IGUALDAD:
                     return "==";
                 case TiposSintax.NO_IGUALDAD:

@@ -5,27 +5,38 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProyectoParadigmas"
         mc:Ignorable="d"
-       Title="Proyecto Paradigmas" Height="450" Width="800">
-    <Grid>
+       Title="Proyecto Paradigmas" Height="783" Width="800">
+    <Grid Height="702" VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0*"/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="407*"/>
         </Grid.ColumnDefinitions>
-        <Menu x:Name="menu_info" Margin="90,313,90,0" Height="35" VerticalAlignment="Top" Grid.ColumnSpan="2">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="43*"/>
+            <RowDefinition Height="404*"/>
+            <RowDefinition Height="50*"/>
+            <RowDefinition Height="205"/>
+        </Grid.RowDefinitions>
+        <Menu x:Name="menu_tools" Margin="10,9,10,9">
+            <Button x:Name="btn_compilar" Content="Compilar" HorizontalAlignment="Center" VerticalAlignment="Bottom" Click="btn_compilar_click"/>
+            <Button x:Name="btn_ejecutar" Content="Ejecutar" HorizontalAlignment="Center" VerticalAlignment="Center" Click="btn_ejecutar_Click"/>
+        </Menu>
+        <Menu x:Name="menu_info" Margin="10,0,10,0" Grid.Row="2" Height="30" VerticalAlignment="Center">
             <Label x:Name="lbl_lines" Content="Líneas: 1" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             <Label x:Name="lbl_line" Content="Línea: 1" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <Label x:Name="lbl_col" Content="Columna: 1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Label x:Name="lbl_col" Content="Columna: 1" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         </Menu>
-        <RichTextBox x:Name="rtbCodigo" Margin="0,70,0,0" TextChanged="rtb_textChanged" FontFamily="Arial" Height="238" VerticalAlignment="Top" HorizontalAlignment="Center" Width="620" Background="#FF1E1E1E" Foreground="#FF569CD6" Grid.Column="1">
+        <RichTextBox x:Name="Rtb_Codigo" Margin="10,34,10,40" TextChanged="Rtb_textChanged" FontFamily="Arial" Background="#FF1E1E1E" Foreground="#FF569CD6" SelectionChanged="Rtb_SelectionChanged" Grid.RowSpan="3">
             <FlowDocument>
                 <Paragraph LineHeight="1">
 
                 </Paragraph>
             </FlowDocument>
         </RichTextBox>
-        <Menu x:Name="menu_tools" Margin="90,40,90,0" Height="25" VerticalAlignment="Top" Grid.ColumnSpan="2">
-            <Button x:Name="btn_compilar" Content="Compilar" HorizontalAlignment="Center" VerticalAlignment="Bottom" Click="btn_compilar_click"/>
-            <Button x:Name="btn_ejecutar" Content="Ejecutar" HorizontalAlignment="Center" VerticalAlignment="Center" Click="btn_ejecutar_Click"/>
-        </Menu>
+        <RichTextBox x:Name="Rtb_OutPut" Margin="10,10,10,10" IsReadOnly="True" TextChanged="Rtb_OutPut_textChanged" FontFamily="Arial" Background="#FF1E1E1E" Foreground="#FF569CD6" SelectionChanged="Rtb_OutPut_SelectionChanged" Grid.Row="3">
+            <FlowDocument>
+                <Paragraph LineHeight="1"/>
+            </FlowDocument>
+        </RichTextBox>
+
     </Grid>
 </Window>

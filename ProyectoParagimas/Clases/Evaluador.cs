@@ -1,17 +1,19 @@
 ﻿using ProyectoParadigmas.AnalisisDeCodigo.Binding;
 using ProyectoParadigmas.Clases.Binding;
+using ProyectoParadigmas.Clases.Simbolos;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 
 namespace ProyectoParadigmas.Clases
 {
     internal class Evaluador
     {
-        private readonly BoundDeclaracion Raiz;
+        private readonly BoundBloqueDeclaracion Raiz;
         private readonly Dictionary<SimboloVariable, object> _variables;
         private object _ultimoValor;
 
-        public Evaluador(BoundDeclaracion raiz, Dictionary<SimboloVariable, object> variables)
+        public Evaluador(BoundBloqueDeclaracion raiz, Dictionary<SimboloVariable, object> variables)
         {
             Raiz = raiz;
             _variables = variables;
@@ -19,41 +21,49 @@ namespace ProyectoParadigmas.Clases
 
         public object Evaluar()
         {
-            EvaluarDeclaracion(this.Raiz);
-            return _ultimoValor;
-        }
+            var labelToIndex = new Dictionary<BoundLabel, int>();
 
-        private void EvaluarDeclaracion(BoundDeclaracion nodo)
-        {
-            switch (nodo.TipoNodo)
+            for (var i = 0; i < Raiz.Declaraciones.Length; i++)
             {
-                case BoundTipoNodo.BLOQUE_DECLARACION:
-                    EvaluarBloqueDeclaracion((BoundBloqueDeclaracion)nodo);
-                    break;
-                case BoundTipoNodo.VARIABLE_DECLARACION:
-                    EvaluarVariableDeclaracion((BoundDeclaracionVariable)nodo);
-                    break;
-                case BoundTipoNodo.IF_DECLARACION:
-                    EvaluarIfDeclaracion((BoundDeclaracionIf)nodo);
-                    break;
-                case BoundTipoNodo.WHILE_DECLRACION:
-                    EvaluarWhileDeclaracion((BoundDeclaracionWhile)nodo);
-                    break;
-                case BoundTipoNodo.FOR_DECLRARACION:
-                    EvaluarForDeclaracion((BoundDeclaracionFor)nodo);
-                    break;
-                case BoundTipoNodo.EXPRESION_DECLARACION:
-                    EvaluarExpresionDeclaracion((ExpresionDeclaracionBound)nodo);
-                    break;
-                default:
-                    throw new Exception($"Nodo inesperado {nodo.TipoNodo}");
+                if (Raiz.Declaraciones[i] is BoundDeclaracionLabel l)
+                    labelToIndex.Add(l.Label, i + 1);
             }
-        }
 
-        private void EvaluarBloqueDeclaracion(BoundBloqueDeclaracion nodo)
-        {
-            foreach (var declaracion in nodo.Declaraciones)
-                EvaluarDeclaracion(declaracion);
+            var index = 0;
+            while (index < Raiz.Declaraciones.Length)
+            {
+                var s = Raiz.Declaraciones[index];
+                switch (s.TipoNodo)
+                {
+                    case BoundTipoNodo.VARIABLE_DECLARACION:
+                        EvaluarVariableDeclaracion((BoundDeclaracionVariable)s);
+                        index++;
+                        break;
+                    case BoundTipoNodo.EXPRESION_DECLARACION:
+                        EvaluarExpresionDeclaracion((ExpresionDeclaracionBound)s);
+                        index++;
+                        break;
+                    case BoundTipoNodo.GOTO_DECLARACION:
+                        var dg = (BoundDeclaracionGotTo)s;
+                        index = labelToIndex[dg.Label];
+                        break;
+                    case BoundTipoNodo.GOTO_CONDICIONAL_DECLARACION:
+                        var dcg= (BoundDeclaracionCondicionalGoto)s;
+                        var condicion = (bool)EvaluarExpresion(dcg.Condicion);
+                        if(condicion == dcg.JumpIfTrue)
+                            index = labelToIndex[dcg.Label];
+                        else
+                            index++;
+                        break;
+                    case BoundTipoNodo.LABEL_DECLRARACION:
+                        index++;
+                        break;
+                    default:
+                        throw new Exception($"Nodo inesperado {s.TipoNodo}");
+                }
+            }
+            
+            return _ultimoValor;
         }
 
         private void EvaluarVariableDeclaracion(BoundDeclaracionVariable nodo)
@@ -61,33 +71,6 @@ namespace ProyectoParadigmas.Clases
             var valor = EvaluarExpresion(nodo.Inicializador);
             _variables[nodo.Variable] = valor;
             _ultimoValor = valor;
-        }
-
-        private void EvaluarIfDeclaracion(BoundDeclaracionIf nodo)
-        {
-            var condicion = (bool)EvaluarExpresion(nodo.Condicion);
-            if (condicion)
-                EvaluarDeclaracion(nodo.ThenDeclaracion);
-            else if (nodo.ElseDeclaracion != null)
-                EvaluarDeclaracion(nodo.ElseDeclaracion);
-        }
-
-        private void EvaluarWhileDeclaracion(BoundDeclaracionWhile nodo)
-        {
-            while((bool)EvaluarExpresion(nodo.Condicion))
-                EvaluarDeclaracion(nodo.Cuerpo);
-        }
-
-        private void EvaluarForDeclaracion(BoundDeclaracionFor nodo)
-        {
-            var lowerBound = (int)EvaluarExpresion(nodo.LowerBound);
-            var upperBound = (int)EvaluarExpresion(nodo.UpperBound);
-            for(var i = lowerBound; i <= upperBound; i++)
-            {
-                _variables[nodo.Variable] = i;
-                EvaluarDeclaracion(nodo.Cuerpo);
-            }
-
         }
 
         private void EvaluarExpresionDeclaracion(ExpresionDeclaracionBound nodo)
@@ -138,10 +121,12 @@ namespace ProyectoParadigmas.Clases
             {
                 case BoundTipoOperadorUnario.IDENTIDAD:
                     return (int)operando;
-                case BoundTipoOperadorUnario.NEGACION:
+                case BoundTipoOperadorUnario.RESTA:
                     return -(int)operando;
                 case BoundTipoOperadorUnario.NEGACION_LOGICA:
                     return !(bool)operando;
+                case BoundTipoOperadorUnario.COMPLEMENTO:
+                    return ~(int)operando;
                 default:
                     throw new Exception($"OperadorToken unario inesperado {expUni.Operador}");
             }
@@ -155,13 +140,31 @@ namespace ProyectoParadigmas.Clases
             switch (expBin.Operador.TipoOperador)
             {
                 case BoundTipoOperadorBinario.ADICION:
-                    return (int)izq + (int)der;
+                    if(expBin.Tipo == TipoSimbolo.Int)
+                        return (int)izq + (int)der;
+                    else
+                        return (string)izq + (string)der;
                 case BoundTipoOperadorBinario.SUSTRACCION:
                     return (int)izq - (int)der;
                 case BoundTipoOperadorBinario.MULTIPLICACION:
                     return (int)izq * (int)der;
                 case BoundTipoOperadorBinario.DIVISION:
                     return (int)izq / (int)der;
+                case BoundTipoOperadorBinario.Y_BITWISE:
+                    if (expBin.Tipo == TipoSimbolo.Int)
+                        return (int)izq & (int)der;
+                    else
+                        return (bool)izq & (bool)der;
+                case BoundTipoOperadorBinario.O_BITWISE:
+                    if (expBin.Tipo == TipoSimbolo.Int)
+                        return (int)izq | (int)der;
+                    else
+                        return (bool)izq | (bool)der;
+                case BoundTipoOperadorBinario.XOR_BITWISE:
+                    if (expBin.Tipo == TipoSimbolo.Int)
+                        return (int)izq ^ (int)der;
+                    else
+                        return (bool)izq ^ (bool)der;
                 case BoundTipoOperadorBinario.Y_LOGICO:
                     return (bool)izq && (bool)der;
                 case BoundTipoOperadorBinario.O_LOGICO:

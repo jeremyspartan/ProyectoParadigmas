@@ -252,6 +252,8 @@ namespace ProyectoParadigmas.Clases.Sintax
                     return ParseLiteralBoolenao();
                 case TiposSintax.NUMERO:
                     return ParseNumeroLiteral();
+                case TiposSintax.STRING:
+                    return ParseStringLiteral();
                 case TiposSintax.IDENTIFICADOR:
                 default:
                     return ParseExpresionNombre();
@@ -277,6 +279,12 @@ namespace ProyectoParadigmas.Clases.Sintax
         {
             var elementoNumerico = MatchToken(TiposSintax.NUMERO);
             return new ExpresionSintaxLiteral(elementoNumerico);
+        }
+
+        private ExpresionSintax ParseStringLiteral()
+        {
+            var elementoString = MatchToken(TiposSintax.STRING);
+            return new ExpresionSintaxLiteral(elementoString);
         }
 
         private ExpresionSintax ParseExpresionNombre()

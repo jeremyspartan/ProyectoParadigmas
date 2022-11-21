@@ -18,6 +18,7 @@ namespace ProyectoParadigmas.Clases.Sintax
     internal abstract class NodoSintax
     {
         public abstract TiposSintax Tipo { get; }
+
         public virtual TextoSpan Span
         {
             get

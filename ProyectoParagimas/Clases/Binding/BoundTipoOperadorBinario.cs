@@ -13,6 +13,9 @@
         MENOR_QUE,
         MENOR_IGUAL_QUE,
         MAYOR_QUE,
-        MAYOR_IGUAL_QUE
+        MAYOR_IGUAL_QUE,
+        Y_BITWISE,
+        O_BITWISE,
+        XOR_BITWISE
     }
 }

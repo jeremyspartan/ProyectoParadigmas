@@ -14,8 +14,7 @@ namespace ProyectoParadigmas.Clases.Sintax
         {
             var parser = new Parser(texto);
             var raiz = parser.ParseUnidadCompilacion();
-            var diagnosticos = parser.Diagnosticos.ToImmutableArray();
-            Diagnosticos = diagnosticos;
+            Diagnosticos = parser.Diagnosticos.ToImmutableArray();
             Texto = texto;
             Raiz = raiz;
         }

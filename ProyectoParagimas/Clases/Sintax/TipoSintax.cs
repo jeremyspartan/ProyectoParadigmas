@@ -29,6 +29,9 @@
         MENOR_IGUAL,
         MAYOR,
         MAYOR_IGUAL,
+        NEGACION,
+        SOMBRERO,
+        STRING,
 
         //Nodos
         UNIDAD_COMPILACION,

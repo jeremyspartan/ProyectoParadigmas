@@ -1,4 +1,5 @@
 ﻿using System;
+using ProyectoParadigmas.Clases.Simbolos;
 
 namespace ProyectoParadigmas.Clases.Binding
 {
@@ -11,7 +12,7 @@ namespace ProyectoParadigmas.Clases.Binding
 
 
         public override BoundTipoNodo TipoNodo => BoundTipoNodo.EXPRESION_VARIABLE;
-        public override Type Tipo => Variable.Tipo;
+        public override TipoSimbolo Tipo => Variable.Tipo;
         public SimboloVariable Variable { get; }
     }
 }

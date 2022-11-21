@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using ProyectoParadigmas.Clases.Simbolos;
 
 namespace ProyectoParadigmas.Clases.Binding
 {

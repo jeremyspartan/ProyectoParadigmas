@@ -1,4 +1,5 @@
-﻿using ProyectoParadigmas.Clases.Sintax;
+﻿using ProyectoParadigmas.Clases.Simbolos;
+using ProyectoParadigmas.Clases.Sintax;
 using ProyectoParadigmas.Clases.Texto;
 using System;
 using System.Collections;
@@ -24,7 +25,7 @@ namespace ProyectoParadigmas.Clases
             _diagnosticos.AddRange(diganosticos._diagnosticos);
         }
 
-        public void ReportarNumeroInvalido(TextoSpan textSpan, string texto, Type type)
+        public void ReportarNumeroInvalido(TextoSpan textSpan, string texto, TipoSimbolo type)
         {
             var mensaje = $"El numero {texto} no es TipoNodo {type} valido.";
             Reporte(textSpan, mensaje);
@@ -43,13 +44,13 @@ namespace ProyectoParadigmas.Clases
             Reporte(textSpan, mensaje);
         }
 
-        public void ReportarOperadorUnarioIndefinido(TextoSpan textSpan, string textoOperador, Type tipoOperador)
+        public void ReportarOperadorUnarioIndefinido(TextoSpan textSpan, string textoOperador, TipoSimbolo tipoOperador)
         {
             var mensaje = $"Token operador unario '{textoOperador}' no está definido para el TipoNodo {tipoOperador}.";
             Reporte(textSpan, mensaje);
         }
 
-        internal void ReportarOperadorBinarioIndefinido(TextoSpan textSpan, string textoOperador, Type izqTipo, Type derTipo)
+        internal void ReportarOperadorBinarioIndefinido(TextoSpan textSpan, string textoOperador, TipoSimbolo izqTipo, TipoSimbolo derTipo)
         {
             var mensaje = $"Token operador binario '{textoOperador}' no está definido para los tipos {izqTipo} y {derTipo}.";
             Reporte(textSpan, mensaje);
@@ -61,7 +62,7 @@ namespace ProyectoParadigmas.Clases
             Reporte(textSpan, mensaje);
         }
 
-        public void ReportarNoSePuedeConvertir(TextoSpan textSpan, Type fromTipo, Type toTipo)
+        public void ReportarNoSePuedeConvertir(TextoSpan textSpan, TipoSimbolo fromTipo, TipoSimbolo toTipo)
         {
             var mensaje = $"No se puede convertir el tipo '{fromTipo}' a tipo '{toTipo}'.";
             Reporte(textSpan, mensaje);
@@ -76,6 +77,12 @@ namespace ProyectoParadigmas.Clases
         public void ReportarNoSePuedeAsignar(TextoSpan textSpan, string nombre)
         {
             var mensaje = $"La variable '{nombre}' es de solo lectura y no puede ser asignada.";
+            Reporte(textSpan, mensaje);
+        }
+
+        public void ReportartringSinTerminar(TextoSpan textSpan)
+        {
+            var mensaje = "String sin terminar.";
             Reporte(textSpan, mensaje);
         }
     }

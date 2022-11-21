@@ -1,4 +1,5 @@
-﻿using ProyectoParadigmas.Clases.Sintax;
+﻿using ProyectoParadigmas.Clases.Simbolos;
+using ProyectoParadigmas.Clases.Sintax;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -91,20 +92,16 @@ namespace ProyectoParadigmas.Clases.Binding
 
         private BoundDeclaracion VariableDeclaracionBind(DeclaracionVariableSintax sintax)
         {
-            var nombre = sintax.Identificador.Texto;
             var isReadOnly = sintax.PalabraReservada.Tipo == TiposSintax.LET_CLAVE;
             var inicializador = ExpresionBind(sintax.Inicializador);
-            var variable = new SimboloVariable(nombre, isReadOnly, inicializador.Tipo);
-
-            if (!_scope.TryDeclare(variable))
-                _diagnosticos.ReportarVariableYaDeclarada(sintax.Identificador.Span, nombre);
+            var variable = BindVariable(sintax.Identificador, isReadOnly, inicializador.Tipo);
 
             return new BoundDeclaracionVariable(variable, inicializador);
         }
 
         private BoundDeclaracion IfDeclaracionBind(DeclaracionIfSintax sintax)
         {
-            var condicion = ExpresionBind(sintax.Condicion, typeof(bool));
+            var condicion = ExpresionBind(sintax.Condicion, TipoSimbolo.Bool);
             var thenDeclaracion = DeclaracionBind(sintax.ThenDeclaracion);
             var elseDeclaracion = sintax.ClausulaElse == null ? null : DeclaracionBind(sintax.ClausulaElse.ElseDeclaracion);
             return new BoundDeclaracionIf(condicion, thenDeclaracion, elseDeclaracion);
@@ -112,28 +109,34 @@ namespace ProyectoParadigmas.Clases.Binding
 
         private BoundDeclaracion WhileDeclaracionBind(DeclaracionWhileSintax sintax)
         {
-            var condicion = ExpresionBind(sintax.Condicion, typeof(bool));
+            var condicion = ExpresionBind(sintax.Condicion, TipoSimbolo.Bool);
             var cuerpo = DeclaracionBind(sintax.Cuerpo);
             return new BoundDeclaracionWhile(condicion, cuerpo);
         }
 
         private BoundDeclaracion ForDeclaracionBind(DeclaracionForSintax sintax)
         {
-            var lowerBound = ExpresionBind(sintax.LowerBound, typeof(int));
-            var upperBound = ExpresionBind(sintax.UpperBound, typeof(int));
+            var lowerBound = ExpresionBind(sintax.LowerBound, TipoSimbolo.Int);
+            var upperBound = ExpresionBind(sintax.UpperBound, TipoSimbolo.Int);
 
             _scope = new BoundScope(_scope);
 
-            var nombre = sintax.Identificador.Texto;
-            var variable = new SimboloVariable(nombre, true, typeof(int));
-            if (!_scope.TryDeclare(variable))
-                _diagnosticos.ReportarVariableYaDeclarada(sintax.Identificador.Span, nombre);
-
+            var variable = BindVariable(sintax.Identificador, isReadOnly: true, TipoSimbolo.Int);
             var cuerpo = DeclaracionBind(sintax.Cuerpo);
 
             _scope = _scope.Padre;
 
             return new BoundDeclaracionFor(variable, lowerBound, upperBound, cuerpo);
+        }
+
+        private SimboloVariable BindVariable(Token identificador, bool isReadOnly, TipoSimbolo tipo)
+        {
+            var nombre = identificador.Texto ?? "?";
+            var declaracion = !identificador.IsMissing;
+            var variable = new SimboloVariable(nombre, isReadOnly, tipo);
+            if (declaracion && !_scope.TryDeclare(variable))
+                _diagnosticos.ReportarVariableYaDeclarada(identificador.Span, nombre);
+            return variable;
         }
 
         private BoundDeclaracion ExpresionDeclaracionBind(ExpresionSintaxDeclaracion sintax)
@@ -142,11 +145,16 @@ namespace ProyectoParadigmas.Clases.Binding
             return new ExpresionDeclaracionBound(expresion);
         }
 
-        private ExpresionBound ExpresionBind(ExpresionSintax sintax, Type tipoTarget)
+        private ExpresionBound ExpresionBind(ExpresionSintax sintax, TipoSimbolo tipoTarget)
         {
             var resultado = ExpresionBind(sintax);
-            if (resultado.Tipo != tipoTarget)
+            if (tipoTarget != TipoSimbolo.Error && 
+                resultado.Tipo != TipoSimbolo.Error &&
+                resultado.Tipo != tipoTarget)
+            {
                 _diagnosticos.ReportarNoSePuedeConvertir(sintax.Span, resultado.Tipo, tipoTarget);
+            }
+                
             return resultado;
         }
 
@@ -158,7 +166,7 @@ namespace ProyectoParadigmas.Clases.Binding
                     return ExpresionParentesisBind((ParentesisSintax)sintax);
 
                 case TiposSintax.EXPRESION_LITERAL:
-                    return BindExpresionLiteral((ExpresionSintaxLiteral)sintax);
+                    return ExpresionLiteralBind((ExpresionSintaxLiteral)sintax);
 
                 case TiposSintax.EXPRESION_NOMBRE:
                     return ExpresionNombrenBind((ExpresionSintaxNombre)sintax);
@@ -167,10 +175,10 @@ namespace ProyectoParadigmas.Clases.Binding
                     return ExpresionAsignacionBind((ExpresionSintaxAsignacion)sintax);
 
                 case TiposSintax.EXPRESION_UNARIA:
-                    return BindExpresionUnaria((ExpresionSintaxUnaria)sintax);
+                    return ExpresionUnariaBind((ExpresionSintaxUnaria)sintax);
 
                 case TiposSintax.EXPRESION_BINARIA:
-                    return BindExpresionBinaria((ExpresionSintaxBinaria)sintax);
+                    return ExpresionBinariaBind((ExpresionSintaxBinaria)sintax);
 
                 default:
                     throw new Exception($"sintaxis inesperada {sintax.Tipo}");
@@ -182,7 +190,7 @@ namespace ProyectoParadigmas.Clases.Binding
             return ExpresionBind(sintax.Expresion);
         }
 
-        private ExpresionBound BindExpresionLiteral(ExpresionSintaxLiteral sintax)
+        private ExpresionBound ExpresionLiteralBind(ExpresionSintaxLiteral sintax)
         {
             var valor = sintax.Valor ?? 0;
             return new ExpresionLiteralBound(valor);
@@ -193,13 +201,13 @@ namespace ProyectoParadigmas.Clases.Binding
             var nombre = sintax.TokenIdentificador.Texto;
 
             //esto significa que el token fue insertado por el parser. Ya reportamos un error, entonces podemos devolver una expresion de error
-            if(string.IsNullOrEmpty(nombre))
-                return new ExpresionLiteralBound(0);
+            if(sintax.TokenIdentificador.IsMissing)
+                return new ExpresionErrorBound();
 
             if (!_scope.TryLookUp(nombre, out var variable))
             {
                 _diagnosticos.ReportarNombreIndefinido(sintax.TokenIdentificador.Span, nombre);
-                return new ExpresionLiteralBound(0);
+                return new ExpresionErrorBound();
             }
 
             return new ExpresionVariableBound(variable);
@@ -228,27 +236,33 @@ namespace ProyectoParadigmas.Clases.Binding
             return new ExpresionAsignacionBound(variable, expresionBound);
         }
 
-        private ExpresionBound BindExpresionUnaria(ExpresionSintaxUnaria sintax)
+        private ExpresionBound ExpresionUnariaBind(ExpresionSintaxUnaria sintax)
         {
             var operandoBound = ExpresionBind(sintax.Operando);
+            if (operandoBound.Tipo == TipoSimbolo.Error)
+                return new ExpresionErrorBound();
+
             var operadorBound = BoundOperadorUnario.Bind(sintax.OperadorToken.Tipo, operandoBound.Tipo);
             if (operadorBound == null)
             {
                 _diagnosticos.ReportarOperadorUnarioIndefinido(sintax.OperadorToken.Span, sintax.OperadorToken.Texto, operandoBound.Tipo);
-                return operandoBound;
+                return new ExpresionErrorBound();
             }
             return new ExpresionUnariaBound(operadorBound, operandoBound);
         }
 
-        private ExpresionBound BindExpresionBinaria(ExpresionSintaxBinaria sintax)
+        private ExpresionBound ExpresionBinariaBind(ExpresionSintaxBinaria sintax)
         {
             var izqBound = ExpresionBind(sintax.Izq);
             var derBound = ExpresionBind(sintax.Der);
+            if(izqBound.Tipo == TipoSimbolo.Error || derBound.Tipo == TipoSimbolo.Error)
+                return new ExpresionErrorBound();
+
             var operadorBound = BoundOperadorBinario.Bind(sintax.OperadorToken.Tipo, izqBound.Tipo, derBound.Tipo);
             if (operadorBound == null)
             {
                 _diagnosticos.ReportarOperadorBinarioIndefinido(sintax.OperadorToken.Span, sintax.OperadorToken.Texto, izqBound.Tipo, derBound.Tipo);
-                return izqBound;
+                return new ExpresionErrorBound();
             }
             return new ExpresionBinariaBound(izqBound, operadorBound, derBound);
         }

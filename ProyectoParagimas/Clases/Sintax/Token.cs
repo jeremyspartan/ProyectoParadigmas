@@ -1,4 +1,6 @@
 ﻿using ProyectoParadigmas.Clases.Texto;
+using System.Linq;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ProyectoParadigmas.Clases.Sintax
 {
@@ -17,5 +19,26 @@ namespace ProyectoParadigmas.Clases.Sintax
         public object Valor { get; }
         public override TiposSintax Tipo { get; }
         public override TextoSpan Span => new TextoSpan(Pos, Texto?.Length ?? 0);
+
+        public bool IsMissing => Texto == null;
+
+        public bool isMissing(ArbolSintax arbol)
+        {
+            if(GetUltimoToken(arbol.Raiz.Declaracion).IsMissing)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static Token GetUltimoToken(NodoSintax nodo)
+        {
+            if (nodo is Token token)
+                return token;
+
+            //un nodo sintax debería siempre contener al menos un token
+            return GetUltimoToken(nodo.GetChildren().Last());
+        }
     }
 }

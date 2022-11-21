@@ -1,13 +1,14 @@
-﻿using ProyectoParadigmas.Clases.Sintax;
+﻿using ProyectoParadigmas.Clases.Simbolos;
+using ProyectoParadigmas.Clases.Sintax;
 using System;
 
 namespace ProyectoParadigmas.Clases.Binding
 {
     internal class BoundOperadorUnario
     {
-        private BoundOperadorUnario(TiposSintax tipoSintax, BoundTipoOperadorUnario tipoOperador, Type type) : this(tipoSintax, tipoOperador, type, type) { }
+        private BoundOperadorUnario(TiposSintax tipoSintax, BoundTipoOperadorUnario tipoOperador, TipoSimbolo type) : this(tipoSintax, tipoOperador, type, type) { }
 
-        private BoundOperadorUnario(TiposSintax tipoSintax, BoundTipoOperadorUnario tipoOperador, Type type, Type resultType)
+        private BoundOperadorUnario(TiposSintax tipoSintax, BoundTipoOperadorUnario tipoOperador, TipoSimbolo type, TipoSimbolo resultType)
         {
             TipoSintax = tipoSintax;
             TipoOperador = tipoOperador;
@@ -17,18 +18,20 @@ namespace ProyectoParadigmas.Clases.Binding
 
         public TiposSintax TipoSintax { get; }
         public BoundTipoOperadorUnario TipoOperador { get; }
-        public Type Type { get; }
-        public Type Tipo { get; }
+        public TipoSimbolo Type { get; }
+        public TipoSimbolo Tipo { get; }
 
         private static BoundOperadorUnario[] operadores =
         {
-            new BoundOperadorUnario(TiposSintax.EXCLAMACION_CIERRE, BoundTipoOperadorUnario.NEGACION_LOGICA, typeof(bool)),
-            new BoundOperadorUnario(TiposSintax.SUMA, BoundTipoOperadorUnario.IDENTIDAD, typeof(int)),
-            new BoundOperadorUnario(TiposSintax.RESTA, BoundTipoOperadorUnario.NEGACION, typeof(int))
+            new BoundOperadorUnario(TiposSintax.EXCLAMACION_CIERRE, BoundTipoOperadorUnario.NEGACION_LOGICA, TipoSimbolo.Bool),
+            new BoundOperadorUnario(TiposSintax.SUMA, BoundTipoOperadorUnario.IDENTIDAD, TipoSimbolo.Int),
+            new BoundOperadorUnario(TiposSintax.RESTA, BoundTipoOperadorUnario.RESTA, TipoSimbolo.Int),
+            new BoundOperadorUnario(TiposSintax.NEGACION, BoundTipoOperadorUnario.COMPLEMENTO, TipoSimbolo.Int),
+
 
         };
 
-        public static BoundOperadorUnario Bind(TiposSintax tipoSintax, Type tipoOperando)
+        public static BoundOperadorUnario Bind(TiposSintax tipoSintax, TipoSimbolo tipoOperando)
         {
             foreach (var operador in operadores)
             {

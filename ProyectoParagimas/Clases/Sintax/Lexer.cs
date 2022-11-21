@@ -1,4 +1,7 @@
-﻿using ProyectoParadigmas.Clases.Texto;
+﻿using ProyectoParadigmas.Clases.Simbolos;
+using ProyectoParadigmas.Clases.Texto;
+using System;
+using System.Text;
 
 namespace ProyectoParadigmas.Clases.Sintax
 {
@@ -80,23 +83,44 @@ namespace ProyectoParadigmas.Clases.Sintax
                     _tipo = TiposSintax.EXCLAMACION_CIERRE;
                     _posicion++;
                     break;
-                //la pos se corre para ignorar los operadores logicos
-                case '&'://Para el "y"
+                case '&'://Para el "y" logico y el bitwise
                     {
-                        if (LookAhead == '&')
+                        _posicion++;
+                        if (CharActual != '&')
                         {
-                            _posicion += 2;
+                            _tipo = TiposSintax.AMPERSAND;
+                        }
+                        else
+                        {
                             _tipo = TiposSintax.DOBLE_AMPERSAND;
+                            _posicion++;
                         }
                         break;
                     }
-                case '|'://Para el "o"
+                case '|'://Para el "o" logico y el bitwise
                     {
-                        if (LookAhead == '|')
+                        _posicion++;
+                        if (CharActual != '|')
                         {
-                            _posicion += 2;
-                            _tipo = TiposSintax.DOBLE_PALO;
+                            _tipo = TiposSintax.PALO;
                         }
+                        else
+                        {
+                            _tipo = TiposSintax.DOBLE_PALO;
+                            _posicion++;
+                        }
+                        break;
+                    }
+                case '~'://negacion de bitwise
+                    {
+                        _posicion += 1;
+                        _tipo = TiposSintax.NEGACION;
+                        break;
+                    }
+                case '^'://negacion de bitwise
+                    {
+                        _posicion += 1;
+                        _tipo = TiposSintax.SOMBRERO;
                         break;
                     }
                 case '='://Para el "igual" o asingacion
@@ -139,6 +163,9 @@ namespace ProyectoParadigmas.Clases.Sintax
                         _posicion++;
                     }
                     break;
+                case '"': //leer "
+                    LeerString();
+                    break;
                 case '0': case '1': case '2': case '3': case '4':
                 case '5' :case '6': case '7': case '8': case '9':
                     LeerNumero();
@@ -174,6 +201,45 @@ namespace ProyectoParadigmas.Clases.Sintax
             return new Token(_tipo, _inicio, texto, _valor);
         }
 
+        private void LeerString()
+        {
+            //saltar el " actual
+            _posicion++;
+            var sb = new StringBuilder();
+            var done = false;
+            while(!done)
+            {
+                switch(CharActual)
+                {
+                    case '\0':
+                    case '\r':
+                    case '\n':
+                        var span = new TextoSpan(_inicio, 1);
+                        _diagnosticos.ReportartringSinTerminar(span);
+                        done = true;
+                        break;
+                    case '"':
+                        if(LookAhead == '"')
+                        {
+                            sb.Append(CharActual);
+                            _posicion += 2;
+                        }
+                        else
+                        {
+                            _posicion++;
+                            done = true;
+                        }
+                        break;
+                    default:
+                        sb.Append(CharActual);
+                        _posicion++;
+                        break;
+                }
+                _tipo = TiposSintax.STRING;
+                _valor = sb.ToString();
+            }
+        }
+
         private void LeerNumero()
         {
             while (char.IsDigit(CharActual))
@@ -184,7 +250,7 @@ namespace ProyectoParadigmas.Clases.Sintax
 
             if (!int.TryParse(texto, out var valor))
             {
-                _diagnosticos.ReportarNumeroInvalido(new TextoSpan(_inicio, tam), texto, typeof(int));
+                _diagnosticos.ReportarNumeroInvalido(new TextoSpan(_inicio, tam), texto, TipoSimbolo.Int);
             }
 
             _valor = valor;

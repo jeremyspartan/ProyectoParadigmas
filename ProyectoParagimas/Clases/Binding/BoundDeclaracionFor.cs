@@ -1,4 +1,6 @@
-﻿namespace ProyectoParadigmas.Clases.Binding
+﻿using ProyectoParadigmas.Clases.Simbolos;
+
+namespace ProyectoParadigmas.Clases.Binding
 {
     internal class BoundDeclaracionFor : BoundDeclaracion
     {
